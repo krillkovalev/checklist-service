@@ -1,8 +1,8 @@
-package application
+package routes
 
 import (
 	"net/http"
-	"api-service/handler"
+	"api-service/handlers"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 )
@@ -22,7 +22,7 @@ func loadRoutes() *chi.Mux {
 }
 
 func loadTaskRoutes(router chi.Router) {
-	taskHandler := &handler.Task{}
+	taskHandler := &handlers.Task{}
 
 	router.Post("/", taskHandler.Create)
 	router.Get("/", taskHandler.List)
