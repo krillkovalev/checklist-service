@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -48,12 +47,9 @@ func (t TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request)  {
 
 }
 func (t TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
-	if err != nil {
-		log.Fatalf("Can't get id parameter: %v", err)
-	}
+	id := chi.URLParam(r, "id")
 
-	err = models.DeleteTaskDB(t.DB, id)
+	err := models.DeleteTaskDB(t.DB, id)
 	if err != nil {
 		log.Fatalf("Unable to delete task: %v", err)
 	}
@@ -61,12 +57,9 @@ func (t TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 func (t TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
-	if err != nil {
-		log.Fatalf("Can't get id parameter: %v", err)
-	}
+	id := chi.URLParam(r, "id")
 
-	err = models.MarkTaskDoneDB(t.DB, id)
+	err := models.MarkTaskDoneDB(t.DB, id)
 	if err != nil {
 		log.Fatalf("Unable to delete task: %v", err)
 	}
