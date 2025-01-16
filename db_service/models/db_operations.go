@@ -28,7 +28,7 @@ func GetTasksDB(db *sql.DB) ([]Task, error) {
 	return result, nil
 }
 
-func DeleteTaskDB(db *sql.DB, id string) error {
+func DeleteTaskDB(db *sql.DB, id int) error {
 	_, err := db.Exec("DELETE FROM tasks WHERE id=$1", id)
  	if err != nil {
 		return fmt.Errorf("error deleting task from db: %v", err)
@@ -36,7 +36,7 @@ func DeleteTaskDB(db *sql.DB, id string) error {
 	return nil 
 }
 
-func MarkTaskDoneDB(db *sql.DB, id string) error{
+func MarkTaskDoneDB(db *sql.DB, id int) error{
 	_, err := db.Exec("update tasks set done=true where id=$1", id)
 	if err != nil {
 		return fmt.Errorf("error updating table in db: %v", err)

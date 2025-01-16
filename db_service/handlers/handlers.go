@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"github.com/go-chi/chi/v5"
+	"strconv"
+	"fmt"
 )
 
 type TaskHandler struct {
 	DB *sql.DB
 }
 
-func (t TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
+func (t *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	task := models.Task{}
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
@@ -30,7 +31,7 @@ func (t TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (t TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request)  {
+func (t *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request)  {
 	tasks, err := models.GetTasksDB(t.DB)
 	if err != nil {
 		log.Fatalf("Unable to fetch all tasks: %v", err)
@@ -46,25 +47,33 @@ func (t TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request)  {
 	w.Write(tasksJson)
 
 }
-func (t TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+func (t *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	str := r.URL.Query().Get("id")
+	id, err := strconv.Atoi(str)
+	if err != nil {
+		fmt.Printf("Error to convert query string: %v", err)
+	}
 
-	err := models.DeleteTaskDB(t.DB, id)
+	err = models.DeleteTaskDB(t.DB, id)
 	if err != nil {
 		log.Fatalf("Unable to delete task: %v", err)
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
 }
-func (t TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+func (t *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
+	str := r.URL.Query().Get("id")
+	id, err := strconv.Atoi(str)
+	if err != nil {
+		fmt.Printf("Error to convert query string: %v", err)
+	}
 
-	err := models.MarkTaskDoneDB(t.DB, id)
+	err = models.MarkTaskDoneDB(t.DB, id)
 	if err != nil {
 		log.Fatalf("Unable to delete task: %v", err)
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
 	
 
 }
