@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"strconv"
 	"fmt"
+	"github.com/go-redis/redis"
 )
 
 type TaskHandler struct {
-	DB *sql.DB
+	DB 		*sql.DB
+	Cache	*redis.Client
 }
 
 func (t *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {

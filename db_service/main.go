@@ -1,4 +1,4 @@
-// TO DO Дописать запуск сервера
+// TO DO Сделать кеширование данных, добавить .env файл и брать все credentials оттуда, поразбираться с dependency injection
 
 package main
 
