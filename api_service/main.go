@@ -23,7 +23,7 @@ func main() {
 func TaskRoutes(taskClient handlers.Task) chi.Router {
 	r := chi.NewRouter()
 
-	r.Get("/list", taskClient.List)
+	r.Get("/getAllTasks", taskClient.List)
 	r.Post("/create", taskClient.Create)
 	r.Put("/done", taskClient.DoneByID)
 	r.Delete("/delete", taskClient.DeleteByID)

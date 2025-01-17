@@ -1,10 +1,12 @@
 package config
 
 import (
-	"github.com/go-redis/redis"
+	"context"
+
+	"github.com/redis/go-redis/v9"
 )
 
-func RedisConnection() *redis.Client{
+func RedisConnection(ctx context.Context) *redis.Client{
 
 	client := redis.NewClient(&redis.Options{
         Addr:     "localhost:6379",
@@ -13,7 +15,7 @@ func RedisConnection() *redis.Client{
     })
 
     // Ping Redis to check if the connection is working
-    _, err := client.Ping().Result()
+    _, err := client.Ping(ctx).Result()
     if err != nil {
         panic(err)
     }

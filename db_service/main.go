@@ -3,14 +3,16 @@
 package main
 
 import (
+	"context"
 	"db_service/config"
 	"db_service/handlers"
 	"fmt"
 	"log"
-	_ "github.com/lib/pq"
 	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -22,10 +24,16 @@ func main() {
 
 	defer database.Close()
 
+
+	ctx := context.Background() 
+	redis := config.RedisConnection(ctx)
+
+	defer redis.Close()
+ 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	taskHandler := handlers.TaskHandler{DB: database} 
+	taskHandler := handlers.TaskHandler{DB: database, Client: redis} 
 	r.Mount("/tasks", TaskRoutes(taskHandler))
 
 
