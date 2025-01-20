@@ -33,12 +33,15 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	taskHandler := handlers.TaskHandler{DB: database, Client: redis} 
+	taskHandler := handlers.TaskHandler{DB: database, Client: redis, Context: ctx} 
 	r.Mount("/tasks", TaskRoutes(taskHandler))
 
 
 	fmt.Println("Server db_service is running")
-	http.ListenAndServe(":8181", r)
+	err = http.ListenAndServe(":8181", r)
+	if err != nil {
+		log.Fatalf("problem starting server: %v", err)
+	}
 }
 
 func TaskRoutes(taskHandler handlers.TaskHandler) chi.Router {

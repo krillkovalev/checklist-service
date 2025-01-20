@@ -10,12 +10,11 @@ import (
 )
 
 const (
-	SetTimeExp = 5 * time.Minute
+	SetTimeExp = 300 * time.Minute
 	KeyFormat = "task:id:%d"
 )
 
 func ToRedisSet(ctx context.Context, rdb *redis.Client, key string, task *Task) error {
-	
 	val := reflect.ValueOf(task).Elem()
 
 	setter := func(p redis.Pipeliner) error {
@@ -38,15 +37,6 @@ func ToRedisSet(ctx context.Context, rdb *redis.Client, key string, task *Task) 
 		return err
 	}
 
-	// if _, err := rdb.Pipelined(ctx, func(rdb redis.Pipeliner) error {
-	// 	rdb.HSet(ctx, key, "id", task.ID)
-	// 	rdb.HSet(ctx, key, "title", task.Title)
-	// 	rdb.HSet(ctx, key, "body", task.Body)
-	// 	rdb.HSet(ctx, key, "done", task.Done)
-	// 	return nil
-	// }); err != nil {
-	// 	panic(err)
-	// }
 	return nil
 
 }

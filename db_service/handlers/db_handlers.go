@@ -21,22 +21,26 @@ type TaskHandler struct {
 func (t *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	task := models.Task{}
-
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
+		log.Printf("Unable to create task: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("bad request: %v", err)
 		return
 	}
+
+	id, err := models.CreateTaskDB(t.DB, task.Title, task.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("Error querying in db: %v", err)
+		return
+	}
+
+	task.ID = id
+	task.Done = false
 	key := fmt.Sprintf(models.KeyFormat, task.ID)
 	if err := models.ToRedisSet(t.Context, t.Client, key, &task); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = models.CreateTaskDB(t.DB, task.Title, task.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("Error caching in redis: %v", err)
 		return
 	}
 
@@ -88,8 +92,9 @@ func (t *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	models.DeleteFromCache(t.Context, t.Client, id)
+	log.Println(id)
 	if err != nil {
-		log.Fatalf("Unable to delete task: %v", err)
+		log.Printf("The key has deleted yet: %v\n", err)
 	}
 
 	err = models.DeleteTaskDB(t.DB, id)
@@ -108,7 +113,7 @@ func (t *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	models.DeleteFromCache(t.Context, t.Client, id)
 	if err != nil {
-		log.Fatalf("Unable to delete task: %v", err)
+		log.Printf("The key has deleted yet: %v\n", err)
 	}
 
 	err = models.MarkTaskDoneDB(t.DB, id)

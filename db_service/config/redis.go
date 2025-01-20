@@ -17,7 +17,7 @@ func RedisConnection(ctx context.Context) *redis.Client{
     // Ping Redis to check if the connection is working
     _, err := client.Ping(ctx).Result()
     if err != nil {
-        panic(err)
+        panic(err) 
     }
 
 	return client

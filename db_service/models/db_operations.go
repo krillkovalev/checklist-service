@@ -5,12 +5,14 @@ import (
 	"fmt"
 )
 
-func CreateTaskDB(db *sql.DB, title, body string) error {
-	_, err := db.Exec("insert into tasks(task_title, task_body) values($1,$2)", title, body)
+func CreateTaskDB(db *sql.DB, title, body string) (int, error) {
+	var id int
+	query := "insert into tasks(task_title, task_body) values($1, $2) returning id"	
+	err := db.QueryRow(query, title, body).Scan(&id)
 	if err != nil {
-		return fmt.Errorf("error inserting data: %v", err)
+		return id, fmt.Errorf("error creating task in db: %v", err)
 	}
-	return nil
+	return id, nil
 }
 
 func GetTasksDB(db *sql.DB) ([]Task, error) {
