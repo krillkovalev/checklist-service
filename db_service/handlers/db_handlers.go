@@ -65,23 +65,54 @@ func (t *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request)  {
 
 }
 
-// func (t *TaskHandler) ActiveTasks(w http.ResponseWriter, r *http.Request)  {
+func (t *TaskHandler) ActiveTasks(w http.ResponseWriter, r *http.Request) {
+	var tasks []models.Task
 
-// 	tasks, err := models.GetTasksDB(t.DB)
-// 	if err != nil {
-// 		log.Fatalf("Unable to fetch all tasks: %v", err)
-// 	}
+	// Используем SCAN для поиска ключей
+	iter := t.Client.Scan(t.Context, 0, "task:id:*", 0).Iterator()
+	for iter.Next(t.Context) {
+		res := t.Client.HGetAll(t.Context, iter.Val())
+		if res.Err() != nil {
+			http.Error(w, fmt.Sprintf("Redis error: %v", res.Err()), http.StatusInternalServerError)
+			return
+		}
 
-// 	tasksJson, err := json.Marshal(tasks)
-// 	if err != nil {
-// 		log.Fatalf("Unable to form response with list of tasks: %v", err)
-// 	}
+		tmp := models.Task{}
+		if err := res.Scan(&tmp); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to parse task from Redis: %v", err), http.StatusInternalServerError)
+			return
+		}
+		tasks = append(tasks, tmp)
+	}
 
-// 	w.Header().Set("Content-type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
-// 	w.Write(tasksJson)
+	// Проверяем ошибки итератора
+	if err := iter.Err(); err != nil {
+		http.Error(w, fmt.Sprintf("Redis iteration error: %v", err), http.StatusInternalServerError)
+		return
+	}
 
-// }
+	// Если в Redis ничего не найдено, загружаем данные из базы данных
+	if len(tasks) == 0 {
+		var err error
+		tasks, err = models.GetTasksDB(t.DB)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Database error: %v", err), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Формируем JSON-ответ
+	tasksJson, err := json.Marshal(tasks)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to encode response: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(tasksJson)
+}
+
 
 
 func (t *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {

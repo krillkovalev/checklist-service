@@ -30,6 +30,21 @@ func GetTasksDB(db *sql.DB) ([]Task, error) {
 	return result, nil
 }
 
+func GetActiveTasksDB(db *sql.DB) ([]Task, error) {
+	rows, err := db.Query("select * from tasks where done = 'false'")
+	result := []Task{}
+	if err != nil {
+		return nil, fmt.Errorf("error fetching tasks from db: %v", err)
+	} else {
+		for rows.Next() {
+			tmp := Task{}
+			rows.Scan(&tmp.ID, &tmp.Title, &tmp.Body, &tmp.Done)
+			result = append(result, tmp)
+		}
+	}
+	return result, nil
+}
+
 func DeleteTaskDB(db *sql.DB, id int) error {
 	_, err := db.Exec("DELETE FROM tasks WHERE id=$1", id)
  	if err != nil {

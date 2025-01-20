@@ -48,6 +48,7 @@ func TaskRoutes(taskHandler handlers.TaskHandler) chi.Router {
 	r := chi.NewRouter()
 
 	r.Get("/list", taskHandler.ListTasks)
+	r.Get("/active", taskHandler.ActiveTasks)
 	r.Post("/create", taskHandler.CreateTask)
 	r.Put("/done", taskHandler.UpdateTask)
 	r.Delete("/delete", taskHandler.DeleteTask)

@@ -56,7 +56,7 @@ func (t *Task) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
-    resp, err := http.Get("http://localhost:8181/getActiveTasks/list")
+    resp, err := http.Get("http://localhost:8181/tasks/active")
 	if err != nil {
 		log.Fatalf("error in db_service: %v", err)
 	}
@@ -68,15 +68,12 @@ func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("response status is incorrect: %v", err)
+		w.WriteHeader(resp.StatusCode)
 	}
-
-	w.WriteHeader(http.StatusOK)
 
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
     w.Write(responseBody)
-    
 }
 
 

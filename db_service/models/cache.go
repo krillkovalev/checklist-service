@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	SetTimeExp = 300 * time.Minute
-	KeyFormat = "task:id:%d"
+	SetTimeExp = 30 * time.Minute
+	KeyFormat = "task:id:%v"
 )
 
 func ToRedisSet(ctx context.Context, rdb *redis.Client, key string, task *Task) error {

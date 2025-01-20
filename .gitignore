@@ -1,3 +1,4 @@
 api_service/bin
 db_service/bin
 .vscode
+.env
