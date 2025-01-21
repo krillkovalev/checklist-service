@@ -32,14 +32,12 @@ func main() {
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	doneCh := make(chan struct{})
-	msgCnt := 0
-	go func(msgCnt int) {
+	go func() {
 		for {
 			select {
 			case err := <- consumer.Errors():
 				fmt.Println(err)
 			case msg := <- consumer.Messages():
-				msgCnt++
 				utils.WriteToLog(msg.Value)
 
 			case <- sigchan:
@@ -47,11 +45,9 @@ func main() {
 				doneCh <- struct{}{}
 			}
 		}
-	}(msgCnt)
+	}()
 
 	<- doneCh
-	fmt.Println("Processed", msgCnt, "messages")
-
 	err = worker.Close(); if err != nil {
 		log.Fatalf("error while consuming: %v", err)
 	}
