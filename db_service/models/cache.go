@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 	"github.com/redis/go-redis/v9"
+	"database/sql"
 	"reflect"
 )
 
@@ -41,12 +42,29 @@ func ToRedisSet(ctx context.Context, rdb *redis.Client, key string, task *Task) 
 
 }
 
-func DeleteFromCache(ctx context.Context, rdb *redis.Client, id int) error{
+func DeleteFromCache(ctx context.Context, rdb *redis.Client, id int) error {
 	key := fmt.Sprintf(KeyFormat, id)
 	_, err := rdb.Del(ctx, key).Result()
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func UpdateCache(db *sql.DB, rdb *redis.Client) ([]Task, error){
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second * 3)
+	defer cancel()
+	
+	tasks, err := GetActiveTasksDB(db)
+	if err != nil {
+		return nil, fmt.Errorf("error sending db query: %v", err)
+	}
+	for _, task := range tasks {
+		key := fmt.Sprintf(KeyFormat, task.ID)
+		if err = ToRedisSet(ctx, rdb, key, &task); err != nil {
+			return nil, fmt.Errorf("error caching in redis: %v", err)
+		}
+	}
+	return tasks, nil
 }
 

@@ -1,3 +1,5 @@
+// To do при каждом получении /getActiveTasks в отдельной горутине обновлять кеш на всякий случай, чтобы возможные незакешированные активные задачи попали в кэш
+
 package handlers
 
 import (
@@ -9,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
 	"github.com/redis/go-redis/v9"
 )
 
@@ -66,9 +69,24 @@ func (t *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request)  {
 }
 
 func (t *TaskHandler) ActiveTasks(w http.ResponseWriter, r *http.Request) {
-	var tasks []models.Task
 
-	// Используем SCAN для поиска ключей
+	errorChan := make(chan error)
+
+	go func () {
+		_, err := models.UpdateCache(t.DB, t.Client)
+		errorChan <- err
+		close(errorChan)
+	}()
+
+	var tasks []models.Task
+	var err error
+	
+	err = <- errorChan
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch caching data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	iter := t.Client.Scan(t.Context, 0, "task:id:*", 0).Iterator()
 	for iter.Next(t.Context) {
 		res := t.Client.HGetAll(t.Context, iter.Val())
@@ -91,16 +109,6 @@ func (t *TaskHandler) ActiveTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Если в Redis ничего не найдено, загружаем данные из базы данных
-	if len(tasks) == 0 {
-		var err error
-		tasks, err = models.GetTasksDB(t.DB)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Database error: %v", err), http.StatusInternalServerError)
-			return
-		}
-	}
-
 	// Формируем JSON-ответ
 	tasksJson, err := json.Marshal(tasks)
 	if err != nil {
@@ -112,8 +120,6 @@ func (t *TaskHandler) ActiveTasks(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(tasksJson)
 }
-
-
 
 func (t *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	str := r.URL.Query().Get("id")

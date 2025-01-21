@@ -1,4 +1,4 @@
-// TO DO Сделать кеширование данных, добавить .env файл и брать все credentials оттуда, поразбираться с dependency injection
+// TO DO поразбираться с dependency injection
 
 package main
 
