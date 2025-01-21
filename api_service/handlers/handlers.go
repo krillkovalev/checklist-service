@@ -27,7 +27,7 @@ func (t *Task) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
     record := models.Messsage{
-        Timestamp: time.Now().String(),
+        Timestamp: time.Now().Format("2006-01-02 15:04:05"),
         Action: "create",
     }
 
@@ -63,7 +63,7 @@ func (t *Task) List(w http.ResponseWriter, r *http.Request) {
 	}
 
     record := models.Messsage{
-        Timestamp: time.Now().String(),
+        Timestamp: time.Now().Format("2006-01-02 15:04:05"),
         Action: "list",
     }
 
@@ -102,7 +102,7 @@ func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
 	}
 
     record := models.Messsage{
-        Timestamp: time.Now().String(),
+        Timestamp: time.Now().Format("2006-01-02 15:04:05"),
         Action: "active",
     }
 
@@ -137,7 +137,7 @@ func (t *Task) DeleteByID(w http.ResponseWriter, r *http.Request) {
     }
 
     record := models.Messsage{
-        Timestamp: time.Now().String(),
+        Timestamp: time.Now().Format("2006-01-02 15:04:05"),
         Action: "deletion",
     }
 
@@ -172,7 +172,7 @@ func (t *Task) DoneByID(w http.ResponseWriter, r *http.Request) {
     }
 
     record := models.Messsage{
-        Timestamp: time.Now().String(),
+        Timestamp: time.Now().Format("2006-01-02 15:04:05"),
         Action: "done",
     }
 
