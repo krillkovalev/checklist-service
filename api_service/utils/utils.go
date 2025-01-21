@@ -1,11 +1,11 @@
 package utils
 
 import (
-	"net/http"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
-	"bytes"
+	"net/http"
 )
 
 func ProxyRequest(client *http.Client, method, url string, body interface{}) ([]byte, error) {

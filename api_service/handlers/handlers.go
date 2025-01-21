@@ -1,26 +1,18 @@
 package handlers
 
 import (
+	"api_service/models"
+	"api_service/utils"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"time"
-    "api_service/utils"
 )
 
 type Task struct {
 	Client 		*http.Client
-}
-
-type RequestBody struct {
-	ID	string `json:"id"`
-}
-
-type Messsage struct {
-    Timestamp   string  `json:"timestamp"`
-    Action      string  `json:"action"`
 }
 
 func (t *Task) Create(w http.ResponseWriter, r *http.Request) {
@@ -33,6 +25,23 @@ func (t *Task) Create(w http.ResponseWriter, r *http.Request) {
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("response status is incorrect: %v", err)
 	}
+
+    record := models.Messsage{
+        Timestamp: time.Now().String(),
+        Action: "create",
+    }
+
+    msg, err := json.Marshal(record)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
+    models.PushMessageToQueue("tasks-log-topic", msg)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
 
 	w.WriteHeader(http.StatusOK)
 }	
@@ -53,7 +62,22 @@ func (t *Task) List(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("response status is incorrect: %v", err)
 	}
 
-	w.WriteHeader(http.StatusOK)
+    record := models.Messsage{
+        Timestamp: time.Now().String(),
+        Action: "list",
+    }
+
+    msg, err := json.Marshal(record)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
+    models.PushMessageToQueue("tasks-log-topic", msg)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
 
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
@@ -77,6 +101,23 @@ func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(resp.StatusCode)
 	}
 
+    record := models.Messsage{
+        Timestamp: time.Now().String(),
+        Action: "active",
+    }
+
+    msg, err := json.Marshal(record)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
+    models.PushMessageToQueue("tasks-log-topic", msg)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
     w.Write(responseBody)
@@ -84,7 +125,7 @@ func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
 
 
 func (t *Task) DeleteByID(w http.ResponseWriter, r *http.Request) {
-	dbReq := RequestBody{}
+	dbReq := models.RequestBody{}
     if err := json.NewDecoder(r.Body).Decode(&dbReq); err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
     }
@@ -95,6 +136,23 @@ func (t *Task) DeleteByID(w http.ResponseWriter, r *http.Request) {
         log.Fatalf("something wrong with request: %v", err)
     }
 
+    record := models.Messsage{
+        Timestamp: time.Now().String(),
+        Action: "deletion",
+    }
+
+    msg, err := json.Marshal(record)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
+    models.PushMessageToQueue("tasks-log-topic", msg)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
     w.Write(responseBody)
@@ -103,7 +161,7 @@ func (t *Task) DeleteByID(w http.ResponseWriter, r *http.Request) {
 
 
 func (t *Task) DoneByID(w http.ResponseWriter, r *http.Request) {
-    dbReq := RequestBody{}
+    dbReq := models.RequestBody{}
     if err := json.NewDecoder(r.Body).Decode(&dbReq); err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
     }
@@ -111,6 +169,23 @@ func (t *Task) DoneByID(w http.ResponseWriter, r *http.Request) {
     responseBody, err := utils.ProxyRequest(t.Client, "PUT", url, dbReq)
     if err != nil {
         log.Fatalf("something wrong with request: %v", err)
+    }
+
+    record := models.Messsage{
+        Timestamp: time.Now().String(),
+        Action: "done",
+    }
+
+    msg, err := json.Marshal(record)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
+    models.PushMessageToQueue("tasks-log-topic", msg)
+    if err != nil {
+        log.Println(err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 
     w.Header().Set("Content-Type", "application/json")
