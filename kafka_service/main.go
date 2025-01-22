@@ -26,7 +26,7 @@ func main() {
 		log.Fatalf("error while consuming: %v", err)
 	}
 
-	fmt.Println("Consumer started")
+	fmt.Println("Server kafka_service is running")
 
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)

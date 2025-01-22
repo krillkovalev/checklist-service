@@ -26,6 +26,7 @@ func ProxyRequest(client *http.Client, method, url string, body interface{}) ([]
     if err != nil {
         return nil, fmt.Errorf("failed to send request: %v", err)
     }
+
     defer resp.Body.Close()
 
     // Проверяем статус-код ответа

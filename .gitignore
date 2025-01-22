@@ -3,3 +3,4 @@ db_service/bin
 .vscode
 db_service/.env
 KafkaServiceLogs.txt
+ApiServiceLogs.json

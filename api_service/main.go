@@ -1,17 +1,29 @@
 package main
 
 import (
-
-	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"net/http"
+	"api_service/config"
 	"api_service/handlers"
+	"api_service/middlewares"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
+
+	logName := "ApiServiceLogs.json"
+	file, err := os.OpenFile(logName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	logger := config.CreateLogger(logName)
+
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(middlewares.Logger(logger))
 
 	taskClient := handlers.Task{Client: &http.Client{}}
 	r.Mount("/api_service", TaskRoutes(taskClient))
@@ -31,3 +43,4 @@ func TaskRoutes(taskClient handlers.Task) chi.Router {
 
 	return r
 }
+

@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -46,17 +47,26 @@ func GetActiveTasksDB(db *sql.DB) ([]Task, error) {
 }
 
 func DeleteTaskDB(db *sql.DB, id int) error {
-	_, err := db.Exec("DELETE FROM tasks WHERE id=$1", id)
+	res, err := db.Exec("DELETE FROM tasks WHERE id=$1", id)
  	if err != nil {
 		return fmt.Errorf("error deleting task from db: %v", err)
 	}
-	return nil 
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return errors.New("error deleting nonexisting item")
+	}
+	return nil
+	
 }
 
 func MarkTaskDoneDB(db *sql.DB, id int) error{
-	_, err := db.Exec("update tasks set done=true where id=$1", id)
+	res, err := db.Exec("update tasks set done=true where id=$1", id)
 	if err != nil {
 		return fmt.Errorf("error updating table in db: %v", err)
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return errors.New("error updating nonexisting item")
 	} 
 	return nil
 }

@@ -136,7 +136,8 @@ func (t *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 
 	err = models.DeleteTaskDB(t.DB, id)
 	if err != nil {
-		log.Fatalf("Unable to delete task: %v", err)
+		log.Printf("Unable to delete task: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -155,10 +156,9 @@ func (t *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	err = models.MarkTaskDoneDB(t.DB, id)
 	if err != nil {
-		log.Fatalf("Unable to delete task: %v", err)
+		log.Printf("Unable to update task: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	
-
 }

@@ -133,7 +133,8 @@ func (t *Task) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("http://localhost:8181/tasks/delete?id=%s", dbReq.ID)
     responseBody, err := utils.ProxyRequest(t.Client, "DELETE", url, dbReq)
     if err != nil {
-        log.Fatalf("something wrong with request: %v", err)
+        log.Printf("something wrong with request: %v", err)
+        http.Error(w, err.Error(), http.StatusBadRequest)
     }
 
     record := models.Messsage{
@@ -168,7 +169,8 @@ func (t *Task) DoneByID(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("http://localhost:8181/tasks/done?id=%s", dbReq.ID)
     responseBody, err := utils.ProxyRequest(t.Client, "PUT", url, dbReq)
     if err != nil {
-        log.Fatalf("something wrong with request: %v", err)
+        log.Printf("something wrong with request: %v", err)
+        http.Error(w, err.Error(), http.StatusBadRequest)
     }
 
     record := models.Messsage{
