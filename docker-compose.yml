@@ -1,0 +1,100 @@
+version: '3'
+
+networks:
+  my_network:
+    driver: bridge
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.8.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - my_network
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    container_name: kafka
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--create", "--topic", "tasks-log-topic", "--partitions", "1", "--replication-factor", "1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+ 
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: krillkovalev
+      POSTGRES_PASSWORD: user
+      POSTGRES_DB: checklist_info
+      DB_PASS: 108814
+    volumes:
+      - ./db_service/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - my_network
+
+  cache:
+    image: redis:latest
+    restart: always
+    environment:
+      REDIS_ADDR: cache:6379
+    ports:
+      - "6379:6379"
+    networks:
+      - my_network
+  
+  db_service:
+    build:
+      context: ./db_service
+    environment:
+      DB_USER: krillkovalev
+      DB_NAME: checklist_info
+      DB_PASS: 108814
+      DB_HOST: localhost
+      REDIS_ADDR: cache:6379
+    networks:
+      - my_network
+    ports:
+      - "8181:8181"
+    depends_on:
+      - cache
+  api_service:
+    build:
+      context: ./api_service
+    ports:
+      - "8282:8282"
+    networks:
+      - my_network
+    depends_on:
+      - db_service
+
+  kafka_service:
+    build:
+      context: ./kafka_service
+    environment:
+      KAFKA_HOST: kafka:9092
+    ports:
+      - "8383:8383"
+    networks:
+      - my_network
+    depends_on:
+      kafka:
+        condition: service_healthy
