@@ -54,12 +54,14 @@ func (t *TaskHandler) ListTasks(w http.ResponseWriter, r *http.Request)  {
 
 	tasks, err := models.GetTasksDB(t.DB)
 	if err != nil {
-		log.Fatalf("Unable to fetch all tasks: %v", err)
+		log.Printf("Unable to fetch all tasks: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	tasksJson, err := json.Marshal(tasks)
 	if err != nil {
-		log.Fatalf("Unable to form response with list of tasks: %v", err)
+		log.Printf("Unable to form response with list of tasks: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-type", "application/json")

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 )
@@ -16,14 +15,16 @@ type Task struct {
 }
 
 func (t *Task) Create(w http.ResponseWriter, r *http.Request) {
+
 	resp, err := http.Post("http://localhost:8181/tasks/create", "application/json", r.Body)
 	if err != nil {
-		log.Fatalf("error in db_service: %v", err) 
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("response status is incorrect: %v", err)
+		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+        return
 	}
 
     record := models.Messsage{
@@ -33,14 +34,14 @@ func (t *Task) Create(w http.ResponseWriter, r *http.Request) {
 
     msg, err := json.Marshal(record)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
 
-    models.PushMessageToQueue("tasks-log-topic", msg)
+    err = models.PushMessageToQueue("tasks-log-topic", msg)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Bad Gateway", http.StatusBadGateway)
+        return
     }
 
 	w.WriteHeader(http.StatusOK)
@@ -49,17 +50,18 @@ func (t *Task) Create(w http.ResponseWriter, r *http.Request) {
 func (t *Task) List(w http.ResponseWriter, r *http.Request) {
     resp, err := http.Get("http://localhost:8181/tasks/list")
 	if err != nil {
-		log.Fatalf("error in db_service: %v", err)
+		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+        return
 	}
     responseBody, err := io.ReadAll(resp.Body)
     if err != nil {
-        log.Fatalf("problem unmarshaling response: %v", err)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
 
-	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("response status is incorrect: %v", err)
+		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+        return
 	}
 
     record := models.Messsage{
@@ -69,14 +71,14 @@ func (t *Task) List(w http.ResponseWriter, r *http.Request) {
 
     msg, err := json.Marshal(record)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
 
-    models.PushMessageToQueue("tasks-log-topic", msg)
+    err = models.PushMessageToQueue("tasks-log-topic", msg)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
 
     w.Header().Set("Content-Type", "application/json")
@@ -88,14 +90,14 @@ func (t *Task) List(w http.ResponseWriter, r *http.Request) {
 func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
     resp, err := http.Get("http://localhost:8181/tasks/active")
 	if err != nil {
-		log.Fatalf("error in db_service: %v", err)
+		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+        return
 	}
     responseBody, err := io.ReadAll(resp.Body)
     if err != nil {
-        log.Fatalf("problem unmarshaling response: %v", err)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
-
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		w.WriteHeader(resp.StatusCode)
@@ -108,14 +110,14 @@ func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
 
     msg, err := json.Marshal(record)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Bad Gateway", http.StatusBadGateway)
+        return
     }
 
-    models.PushMessageToQueue("tasks-log-topic", msg)
+    err = models.PushMessageToQueue("tasks-log-topic", msg)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
 
     w.Header().Set("Content-Type", "application/json")
@@ -127,14 +129,15 @@ func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
 func (t *Task) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	dbReq := models.RequestBody{}
     if err := json.NewDecoder(r.Body).Decode(&dbReq); err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
+        http.Error(w, "Bad Request", http.StatusBadRequest)
+        return
     }
 
 	url := fmt.Sprintf("http://localhost:8181/tasks/delete?id=%s", dbReq.ID)
     responseBody, err := utils.ProxyRequest(t.Client, "DELETE", url, dbReq)
     if err != nil {
-        log.Printf("something wrong with request: %v", err)
-        http.Error(w, err.Error(), http.StatusBadRequest)
+        http.Error(w, "Bad Request", http.StatusBadRequest)
+        return
     }
 
     record := models.Messsage{
@@ -144,14 +147,14 @@ func (t *Task) DeleteByID(w http.ResponseWriter, r *http.Request) {
 
     msg, err := json.Marshal(record)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
 
-    models.PushMessageToQueue("tasks-log-topic", msg)
+    err = models.PushMessageToQueue("tasks-log-topic", msg)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
 
     w.Header().Set("Content-Type", "application/json")
@@ -165,12 +168,13 @@ func (t *Task) DoneByID(w http.ResponseWriter, r *http.Request) {
     dbReq := models.RequestBody{}
     if err := json.NewDecoder(r.Body).Decode(&dbReq); err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
+        return
     }
 	url := fmt.Sprintf("http://localhost:8181/tasks/done?id=%s", dbReq.ID)
     responseBody, err := utils.ProxyRequest(t.Client, "PUT", url, dbReq)
     if err != nil {
-        log.Printf("something wrong with request: %v", err)
-        http.Error(w, err.Error(), http.StatusBadRequest)
+        http.Error(w, "Bad Request", http.StatusBadRequest)
+        return
     }
 
     record := models.Messsage{
@@ -180,14 +184,14 @@ func (t *Task) DoneByID(w http.ResponseWriter, r *http.Request) {
 
     msg, err := json.Marshal(record)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
 
-    models.PushMessageToQueue("tasks-log-topic", msg)
+    err = models.PushMessageToQueue("tasks-log-topic", msg)
     if err != nil {
-        log.Println(err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
     }
 
     w.Header().Set("Content-Type", "application/json")

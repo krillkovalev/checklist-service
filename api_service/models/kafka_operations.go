@@ -26,6 +26,5 @@ func PushMessageToQueue(topic string, message []byte) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
