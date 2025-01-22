@@ -4,3 +4,4 @@ db_service/bin
 db_service/.env
 KafkaServiceLogs.txt
 ApiServiceLogs.json
+DBServiceLogs.json
