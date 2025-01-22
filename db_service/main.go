@@ -1,17 +1,15 @@
-// TO DO поразбираться с dependency injection
-
 package main
 
 import (
 	"context"
 	"db_service/config"
 	"db_service/handlers"
+	"db_service/middlewares"
 	"fmt"
 	"log"
 	"net/http"
-
+	"os"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/lib/pq"
 )
 
@@ -29,9 +27,18 @@ func main() {
 	redis := config.RedisConnection(ctx)
 
 	defer redis.Close()
- 
+	
+	logName := "DBServiceLogs.json"
+	file, err := os.OpenFile(logName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	logger := config.CreateLogger(logName)
+
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(middlewares.Logger(logger))
 
 	taskHandler := handlers.TaskHandler{DB: database, Client: redis, Context: ctx} 
 	r.Mount("/tasks", TaskRoutes(taskHandler))
