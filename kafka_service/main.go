@@ -44,7 +44,9 @@ func main() {
 				fmt.Println(err)
 			case msg := <- consumer.Messages():
 				utils.WriteToLog(msg.Value)
-
+				if err != nil {
+					fmt.Println(err)
+				}
 			case <- sigchan:
 				fmt.Println("Interrupt is detected")
 				doneCh <- struct{}{}
