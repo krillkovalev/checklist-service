@@ -15,6 +15,7 @@ services:
       - "2181:2181"
     networks:
       - my_network
+
   kafka:
     image: confluentinc/cp-kafka:7.8.0
     container_name: kafka
@@ -31,7 +32,7 @@ services:
     networks:
       - my_network
     healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--create", "--topic", "tasks-log-topic", "--partitions", "1", "--replication-factor", "1"]
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "kafka:9092", "--create", "--topic", "tasks-log-topic", "--partitions", "2", "--replication-factor", "1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,9 +42,8 @@ services:
     restart: always
     environment:
       POSTGRES_USER: krillkovalev
-      POSTGRES_PASSWORD: user
+      POSTGRES_PASSWORD: '108814'
       POSTGRES_DB: checklist_info
-      DB_PASS: 108814
     volumes:
       - ./db_service/migrations:/docker-entrypoint-initdb.d
     ports:
@@ -67,8 +67,9 @@ services:
     environment:
       DB_USER: krillkovalev
       DB_NAME: checklist_info
-      DB_PASS: 108814
-      DB_HOST: localhost
+      DB_PASS: '108814'
+      DB_HOST: db
+      DB_PORT: 5432
       REDIS_ADDR: cache:6379
     networks:
       - my_network
@@ -76,11 +77,15 @@ services:
       - "8181:8181"
     depends_on:
       - cache
+
   api_service:
     build:
       context: ./api_service
     ports:
       - "8282:8282"
+    environment:
+      DB_SERVICE_URL: "http://db_service:8181"
+      KAFKA_HOST: "kafka:9092"
     networks:
       - my_network
     depends_on:

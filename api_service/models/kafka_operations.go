@@ -3,12 +3,16 @@ package models
 import (
 	"github.com/IBM/sarama"
 	"api_service/config"
+	"os"
+
 )
 
-
-
 func PushMessageToQueue(topic string, message []byte) error {
-	brokers := []string{"localhost:9092"}
+	kafkaHost := os.Getenv("KAFKA_HOST")
+    if kafkaHost == "" {
+        kafkaHost = "localhost:9092"
+    }
+    brokers := []string{kafkaHost}
 
 	producer, err := config.ConnectProducer(brokers)
 	if err != nil {

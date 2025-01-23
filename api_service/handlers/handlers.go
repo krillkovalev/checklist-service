@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -15,8 +16,12 @@ type Task struct {
 }
 
 func (t *Task) Create(w http.ResponseWriter, r *http.Request) {
+    dbServiceURL := os.Getenv("DB_SERVICE_URL")
+    if dbServiceURL == "" {
+        dbServiceURL = "http://localhost:8181"
+    }
 
-	resp, err := http.Post("http://localhost:8181/tasks/create", "application/json", r.Body)
+	resp, err := http.Post(fmt.Sprintf("%s/tasks/create", dbServiceURL), "application/json", r.Body)
 	if err != nil {
         http.Error(w, "Internal server error", http.StatusInternalServerError)
         return
@@ -48,11 +53,20 @@ func (t *Task) Create(w http.ResponseWriter, r *http.Request) {
 }	
 
 func (t *Task) List(w http.ResponseWriter, r *http.Request) {
-    resp, err := http.Get("http://localhost:8181/tasks/list")
+    dbServiceURL := os.Getenv("DB_SERVICE_URL")
+    if dbServiceURL == "" {
+        dbServiceURL = "http://localhost:8181"
+    }
+
+
+    resp, err := http.Get(fmt.Sprintf("%s/tasks/list", dbServiceURL))
 	if err != nil {
 		http.Error(w, "Bad Gateway", http.StatusBadGateway)
         return
 	}
+
+    defer resp.Body.Close()
+
     responseBody, err := io.ReadAll(resp.Body)
     if err != nil {
         http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -77,7 +91,7 @@ func (t *Task) List(w http.ResponseWriter, r *http.Request) {
 
     err = models.PushMessageToQueue("tasks-log-topic", msg)
     if err != nil {
-        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        http.Error(w, "Bad Gateway", http.StatusBadGateway)
         return
     }
 
@@ -88,7 +102,12 @@ func (t *Task) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
-    resp, err := http.Get("http://localhost:8181/tasks/active")
+    dbServiceURL := os.Getenv("DB_SERVICE_URL")
+    if dbServiceURL == "" {
+        dbServiceURL = "http://localhost:8181"
+    }
+
+    resp, err := http.Get(fmt.Sprintf("%s/tasks/active", dbServiceURL))
 	if err != nil {
 		http.Error(w, "Bad Gateway", http.StatusBadGateway)
         return
@@ -102,6 +121,8 @@ func (t *Task) ActiveTasks(w http.ResponseWriter, r *http.Request) {
 	if resp.StatusCode != http.StatusOK {
 		w.WriteHeader(resp.StatusCode)
 	}
+
+    defer resp.Body.Close()
 
     record := models.Messsage{
         Timestamp: time.Now().Format("2006-01-02 15:04:05"),
@@ -132,8 +153,13 @@ func (t *Task) DeleteByID(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Bad Request", http.StatusBadRequest)
         return
     }
+    
+    dbServiceURL := os.Getenv("DB_SERVICE_URL")
+    if dbServiceURL == "" {
+        dbServiceURL = "http://localhost:8181"
+    }
 
-	url := fmt.Sprintf("http://localhost:8181/tasks/delete?id=%s", dbReq.ID)
+	url := fmt.Sprintf("%s/tasks/delete?id=%s", dbServiceURL, dbReq.ID)
     responseBody, err := utils.ProxyRequest(t.Client, "DELETE", url, dbReq)
     if err != nil {
         http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -170,7 +196,13 @@ func (t *Task) DoneByID(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
-	url := fmt.Sprintf("http://localhost:8181/tasks/done?id=%s", dbReq.ID)
+
+    dbServiceURL := os.Getenv("DB_SERVICE_URL")
+    if dbServiceURL == "" {
+        dbServiceURL = "http://localhost:8181"
+    }
+
+	url := fmt.Sprintf("%s/tasks/done?id=%s", dbServiceURL, dbReq.ID)
     responseBody, err := utils.ProxyRequest(t.Client, "PUT", url, dbReq)
     if err != nil {
         http.Error(w, "Bad Request", http.StatusBadRequest)

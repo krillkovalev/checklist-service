@@ -10,18 +10,16 @@ import (
 	"syscall"
 
 	"github.com/IBM/sarama"
-	"github.com/joho/godotenv"
 )
 
 func main() {
 
 	topic := "tasks-log-topic"
 
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Failed to load .env file")
-	}
 	hostName := os.Getenv("KAFKA_HOST")
+	if hostName == "" {
+		hostName = "localhost:9092"
+	}
 
 	worker, err := config.ConnectConsumer([]string{hostName})
 	if err != nil {
