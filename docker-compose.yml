@@ -94,10 +94,11 @@ services:
   kafka_service:
     build:
       context: ./kafka_service
-    environment:
-      KAFKA_HOST: kafka:9092
     ports:
       - "8383:8383"
+    environment:
+      KAFKA_HOST: kafka:9092
+      KAFKA_TOPIC: tasks-log-topic
     networks:
       - my_network
     depends_on:
