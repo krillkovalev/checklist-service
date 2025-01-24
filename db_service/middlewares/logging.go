@@ -13,6 +13,8 @@ import (
 	"context"
 )
 
+type loggerKeyType struct{}
+
 func Logger(l zerolog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -34,8 +36,10 @@ func Logger(l zerolog.Logger) func(next http.Handler) http.Handler {
 			tookMs := time.Since(begin).Milliseconds()
 			logger.Int64("took", tookMs).Int("status_code", status).Msgf("[%d] %s http request for %s took %dms", status, r.Method, path, tookMs)
 		}(time.Now())
+		
+		keyType := loggerKeyType{}
 
-		ctx = context.WithValue(ctx, "logger", logger)
+		ctx = context.WithValue(ctx, keyType, logger)
 		next.ServeHTTP(rec, r.WithContext(ctx))
 
 		for k, v := range rec.Header() {

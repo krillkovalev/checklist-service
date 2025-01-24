@@ -1,14 +1,9 @@
-.PHONY: run api db stop
+all: run lint
 
-api:
-	cd api_service && go run main.go & echo $$! > api.pid
+run:
+	docker-compose up -d 
 
-db:
-	cd db_service && go run main.go & echo $$! > db.pid
-
-run: api db
-	@echo "Servers are running. Use 'make stop' to terminate them."
-
-stop:
-	@if [ -f api.pid ]; then kill $$(cat api.pid) && rm api.pid; echo "Stopped API server"; fi
-	@if [ -f db.pid ]; then kill $$(cat db.pid) && rm db.pid; echo "Stopped DB server"; fi
+lint:
+	-cd api_service && golangci-lint run ./...
+	-cd db_service && golangci-lint run ./...
+	-cd kafka_service && golangci-lint run ./...
