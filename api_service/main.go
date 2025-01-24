@@ -5,16 +5,16 @@ import (
 	"api_service/handlers"
 	"api_service/middlewares"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
 	"os"
-	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 
 	logName := "ApiServiceLogs.json"
-	file, err := os.OpenFile(logName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(logName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o666)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func main() {
 	logger := config.CreateLogger(logName)
 
 	r := chi.NewRouter()
-	r.Use(middlewares.Logger(logger))
+	r.Use(middlewares.Logger(&logger))
 
 	taskClient := handlers.Task{Client: &http.Client{}}
 	r.Mount("/api_service", TaskRoutes(taskClient))
@@ -43,4 +43,3 @@ func TaskRoutes(taskClient handlers.Task) chi.Router {
 
 	return r
 }
-

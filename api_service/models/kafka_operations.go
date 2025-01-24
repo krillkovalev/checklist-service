@@ -1,18 +1,18 @@
 package models
 
 import (
-	"github.com/IBM/sarama"
 	"api_service/config"
+	"github.com/IBM/sarama"
 	"os"
-
 )
 
 func PushMessageToQueue(topic string, message []byte) error {
 	kafkaHost := os.Getenv("KAFKA_HOST")
-    if kafkaHost == "" {
-        kafkaHost = "localhost:9092"
-    }
-    brokers := []string{kafkaHost}
+	if kafkaHost == "" {
+		kafkaHost = "localhost:9092"
+	}
+
+	brokers := []string{kafkaHost}
 
 	producer, err := config.ConnectProducer(brokers)
 	if err != nil {
@@ -26,9 +26,10 @@ func PushMessageToQueue(topic string, message []byte) error {
 		Value: sarama.StringEncoder(message),
 	}
 
-	_, _, err =  producer.SendMessage(msg)
+	_, _, err = producer.SendMessage(msg)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
