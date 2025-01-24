@@ -5,4 +5,3 @@ db_service/.env
 KafkaServiceLogs.txt
 ApiServiceLogs.json
 DBServiceLogs.json
-migrations
