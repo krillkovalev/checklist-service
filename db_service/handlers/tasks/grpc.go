@@ -1,23 +1,23 @@
 package handlers
 
 import (
+	pb "checklist-todo/db_service/generated"
 	"db_service/types"
-	"services/common/genproto/db_service"
+	"db_service/db_service"
 	"context"
 	grpc "google.golang.org/grpc"
 )
 
 type TasksGrpcHandler struct {
 	dbService types.DBService
-	db_service.UnimplementedDBServiceServer
+	pb.UnimplementedDBServiceServer
 }
 
 func NewGrpcDBService(grpc *grpc.Server, dbService types.DBService) {
 	gRPCHandler := &TasksGrpcHandler{
 		dbService: dbService,
 	}
-
-	db_service.RegisterDBServiceServer(grpc, gRPCHandler)
+	pb.RegisterDBServiceServer(grpc, gRPCHandler)
 }
 
 func (h *TasksGrpcHandler) CreateTask(ctx context.Context, req *db_service.CreateTaskRequest) (*db_service.CreateTaskResponse, error) {
