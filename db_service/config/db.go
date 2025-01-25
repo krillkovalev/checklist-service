@@ -13,7 +13,7 @@ import (
 func ConnectPostgresDB() (*sql.DB, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Failed to load .env file")
+		log.Println("Failed to load .env file")
 	}
 	pgUser := os.Getenv("DB_USER")
 	dbName := os.Getenv("DB_NAME")

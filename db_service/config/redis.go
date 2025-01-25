@@ -11,7 +11,7 @@ import (
 func RedisConnection(ctx context.Context) *redis.Client{
     err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Failed to load .env file")
+		log.Println("Failed to load .env file")
 	}
     address := os.Getenv("REDIS_ADDR")
 	client := redis.NewClient(&redis.Options{
