@@ -1,40 +1,37 @@
 package handlers
 
 import (
-	"db_service/types"
-	"services/common/genproto/db_service"
 	"context"
+	"db_service/generated/tasks"
+	"db_service/models"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	grpc "google.golang.org/grpc"
 )
 
 type TasksGrpcHandler struct {
-	dbService types.DBService
-	db_service.UnimplementedDBServiceServer
+	dbService models.DBService
+	tasks.UnimplementedDBServiceServer
 }
 
-func NewGrpcDBService(grpc *grpc.Server, dbService types.DBService) {
+func NewGrpcDBService(grpc *grpc.Server, dbService models.DBService) {
 	gRPCHandler := &TasksGrpcHandler{
 		dbService: dbService,
 	}
 
-	db_service.RegisterDBServiceServer(grpc, gRPCHandler)
+	tasks.RegisterDBServiceServer(grpc, gRPCHandler)
 }
 
-func (h *TasksGrpcHandler) CreateTask(ctx context.Context, req *db_service.CreateTaskRequest) (*db_service.CreateTaskResponse, error) {
-	task := &types.Task{
+func (h *TasksGrpcHandler) CreateTask(ctx context.Context, req *tasks.CreateTaskRequest) (*wrapperspb.BoolValue, error) {
+	task := &models.Task{
 		Title: req.Title,
-		Body: req.Body,
-
+		Body:  req.Body,
 	}
 
 	err := h.dbService.CreateTask(ctx, task)
 	if err != nil {
-		return nil, err
+		return wrapperspb.Bool(false), err
 	}
 
-	res := &db_service.CreateTaskResponse {
-		Status: "success",
-	}
-
-	return res, nil
+	return wrapperspb.Bool(true), nil
 }
