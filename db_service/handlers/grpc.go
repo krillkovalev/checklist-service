@@ -54,16 +54,20 @@ func (t *TasksGrpcHandler) ListTasks(ctx context.Context, in *pb.EmptyRequest) (
 	tasks, err := service.GetTasksDB(t.DBConn)
 	if err != nil {
 		log.Printf("Unable to fetch all tasks: %v", err)
-		return nil, status.Errorf(codes.NotFound, "Error retrieving tasks from the db")
+		return nil, status.Errorf(codes.NotFound, "error retrieving tasks from the db")
 	}
 
-	response := pb.ListTasksResponse{}
+	response := pb.ListTasksResponse{
+		Tasks: make([]*pb.Task, len(tasks)),
+	}
 
 	for index, task := range tasks {
-		response.Tasks[index].Id = int64(task.ID)
-		response.Tasks[index].Title = task.Title
-		response.Tasks[index].Body = task.Body
-		response.Tasks[index].Done = task.Done
+		response.Tasks[index] = &pb.Task{
+			Id: int64(task.ID),
+			Title: task.Title,
+			Body:  task.Body,
+			Done:  task.Done,
+		}
 	}
 
 	return &response, nil
@@ -106,13 +110,17 @@ func (t *TasksGrpcHandler) ActiveTasks(ctx context.Context, in *pb.EmptyRequest)
 		return nil, status.Errorf(codes.Internal, "Redis iteration error")
 	}
 
-	response := pb.ListTasksResponse{}
+	response := pb.ListTasksResponse{
+		Tasks: make([]*pb.Task, len(tasks)),
+	}
 
 	for index, task := range tasks {
-		response.Tasks[index].Id = int64(task.ID)
-		response.Tasks[index].Title = task.Title
-		response.Tasks[index].Body = task.Body
-		response.Tasks[index].Done = task.Done
+		response.Tasks[index] = &pb.Task{
+			Id: int64(task.ID),
+			Title: task.Title,
+			Body:  task.Body,
+			Done:  task.Done,
+		}
 	}
 
 	return &response, nil
