@@ -1,8 +1,10 @@
-package main
+package server
 
 import (
 	"db_service/handlers"
-	"db_service/service"
+	"github.com/redis/go-redis/v9"
+	"database/sql"
+	"context"
 	"log"
 	"net"
 
@@ -11,13 +13,13 @@ import (
 
 type gRPCServer struct {
 	addr string
-}
+} 
 
 func NewGRPCServer(addr string) *gRPCServer {
 	return &gRPCServer{addr:  addr}
 }
 
-func (s *gRPCServer) Run() error {
+func (s *gRPCServer) Run(client *redis.Client, ctx context.Context, db *sql.DB) error {
 	lis, err := net.Listen("tcp", s.addr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -25,10 +27,7 @@ func (s *gRPCServer) Run() error {
 
 	grpcServer := grpc.NewServer()
 
-	// register grpc services
-
-	dbService := service.NewDBService()
-	handlers.NewGrpcDBService(grpcServer, dbService)
+	handlers.NewGrpcDBService(grpcServer, client, ctx, db)
 
 	log.Println("Starting gRPC server on", s.addr)
 
