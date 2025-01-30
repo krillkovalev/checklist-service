@@ -20,6 +20,7 @@ func LogAction(action string) {
 		Action:    action,
 	}
 
+
 	msg, err := json.Marshal(record)
 	if err != nil {
 		log.Print("Error marshalling log message: ", err)
@@ -35,6 +36,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request, action string, reques
 	client, conn, err := config.InitClient()
 	if err != nil {
 		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+		log.Println(err)
 		return
 	}
 	defer conn.Close()
@@ -49,6 +51,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request, action string, reques
 	res, err := grpcCall(client, r.Context(), request)
 	if err != nil {
 		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+		log.Println(err)
 		return
 	}
 

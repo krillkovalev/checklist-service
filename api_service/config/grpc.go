@@ -16,7 +16,7 @@ func InitClient() (pb.DBServiceClient, *grpc.ClientConn, error) {
 		log.Println("Failed to load .env file")
 	}
 
-	address := os.Getenv("GRPC_SERVER")
+	address := os.Getenv("DB_SERVICE_URL")
 	if address == "" {
 		address = "localhost:8181"
 	}

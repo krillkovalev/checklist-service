@@ -1,7 +1,7 @@
 api_service/bin
 db_service/bin
 .vscode
-db_service/.env
+.env
 KafkaServiceLogs.txt
 ApiServiceLogs.json
 DBServiceLogs.json

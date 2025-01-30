@@ -26,7 +26,7 @@ func main() {
 	logger := config.CreateLogger(logName)
 
 	r := chi.NewRouter()
-	r.Use(middlewares.Logger(&logger))
+	r.Use(middlewares.Logger(logger))
 
 	taskClient := handlers.Task{Ctx: context.Background()}
 	r.Mount("/api_service", TaskRoutes(taskClient))
