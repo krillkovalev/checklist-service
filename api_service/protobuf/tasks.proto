@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+option go_package = "generated/tasks";
+
+message Task {
+  int64 id = 1;
+  string title = 2;
+  string body = 3;
+  bool done = 4;  
+}
+
+message ListTasksResponse {
+  repeated Task tasks = 1; 
+}
+
+service DBService {
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse) {}
+  rpc ListTasks(EmptyRequest) returns (ListTasksResponse) {}
+  rpc ActiveTasks(EmptyRequest) returns (ListTasksResponse) {}
+  rpc DeleteTask(DeleteTaskRequest) returns (SuccessResponse) {}
+  rpc UpdateTask(UpdateTaskRequest) returns (SuccessResponse) {}
+} 
+
+message CreateTaskRequest {
+  string title = 1;
+  string body = 2;
+}
+
+message CreateTaskResponse { 
+  int64 id = 1;
+}
+
+message EmptyRequest {
+
+}
+
+message DeleteTaskRequest {
+  int64 id = 1;
+}
+
+message UpdateTaskRequest {
+  int64 id = 1;
+}
+
+message SuccessResponse {
+  string body = 1;
+}

@@ -1,45 +1,73 @@
 package utils
 
 import (
-	"bytes"
+	"api_service/config"
+	pb "api_service/generated/tasks"
+	"api_service/models"
+	"context"
 	"encoding/json"
-	"fmt"
-	"io"
+	"log"
 	"net/http"
+	"time"
+
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
-func ProxyRequest(client *http.Client, method, url string, body interface{}) ([]byte, error) {
-    // Преобразуем тело запроса в JSON
-    jsonBytes, err := json.Marshal(body)
-    if err != nil {
-        return nil, fmt.Errorf("error marshaling request body: %v", err)
-    }
+func LogAction(action string) {
+	record := models.Messsage{
+		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+		Action:    action,
+	}
 
-    // Создаем HTTP-запрос
-    req, err := http.NewRequest(method, url, bytes.NewReader(jsonBytes))
-    if err != nil {
-        return nil, fmt.Errorf("failed to create request: %v", err)
-    }
+	msg, err := json.Marshal(record)
+	if err != nil {
+		log.Print("Error marshalling log message: ", err)
+		return
+	}
 
-    // Отправляем запрос
-    resp, err := client.Do(req)
-    if err != nil {
-        return nil, fmt.Errorf("failed to send request: %v", err)
-    }
+	if err := models.PushMessageToQueue("tasks-log-topic", msg); err != nil {
+		log.Print("Error pushing message to queue: ", err)
+	}
+}
 
-    defer resp.Body.Close()
+func HandleRequest(w http.ResponseWriter, r *http.Request, action string, request any, grpcCall func(pb.DBServiceClient, context.Context, any) (any, error)) {
+	client, conn, err := config.InitClient()
+	if err != nil {
+		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+		return
+	}
+	defer conn.Close()
 
-    // Проверяем статус-код ответа
-    if resp.StatusCode != http.StatusOK {
-        body, _ := io.ReadAll(resp.Body)
-        return nil, fmt.Errorf("unexpected status code: %d, response: %s", resp.StatusCode, string(body))
-    }
+	if action != "active" && action != "list" {
+		if err = json.NewDecoder(r.Body).Decode(request); err != nil {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+	}
 
-    // Читаем тело ответа
-    responseBody, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return nil, fmt.Errorf("failed to read response body: %v", err)
-    }
+	res, err := grpcCall(client, r.Context(), request)
+	if err != nil {
+		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+		return
+	}
 
-    return responseBody, nil
+	Protores, ok := res.(proto.Message)
+	if !ok {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	m := protojson.MarshalOptions{EmitUnpopulated: true}
+	responseBody, err := m.Marshal(Protores)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	LogAction(action)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(responseBody)
 }
