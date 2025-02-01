@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	//"os"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	// "google.golang.org/grpc"
 )
 
 // InterceptorLogger adapts standard Go logger to interceptor logger.

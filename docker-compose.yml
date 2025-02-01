@@ -20,7 +20,8 @@ services:
     image: confluentinc/cp-kafka:7.8.0
     container_name: kafka
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_BROKER_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -84,7 +85,7 @@ services:
     ports:
       - "8282:8282"
     environment:
-      KAFKA_HOST: "kafka:9092"
+      # KAFKA_HOST: "kafka:9092"
       DB_SERVICE_URL: "db_service:8181"
     networks:
       - my_network
