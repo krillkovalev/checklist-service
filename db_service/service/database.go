@@ -1,14 +1,13 @@
 package service
 
 import (
-	"context"
 	"database/sql"
 	"db_service/models"
 	"fmt"
 	"errors"
 )
 
-func CreateTaskDB(ctx context.Context, task *models.Task, db *sql.DB) (int, error) {
+func CreateTaskDB(task *models.Task, db *sql.DB) (int, error) {
 	var id int
 	query := "insert into tasks(task_title, task_body) values($1, $2) returning id"	
 	err := db.QueryRow(query, task.Title, task.Body).Scan(&id)

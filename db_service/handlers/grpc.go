@@ -35,7 +35,7 @@ func (t *TasksGrpcHandler) CreateTask(ctx context.Context, in *pb.CreateTaskRequ
 		Body:  in.Body,
 	}
 
-	id, err := service.CreateTaskDB(ctx, task, t.DBConn)
+	id, err := service.CreateTaskDB(task, t.DBConn)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Error retrieving tasks from the db")
 	}
