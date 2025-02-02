@@ -1,7 +1,11 @@
 PROTO_DIR=protobuf
 OUT_DIR=./generated/tasks
 
-all: run lint
+all: run lint test
+
+test:
+	-cd api_service && go test -v ./...
+	-cd db_service && go test -v ./...
 
 run:
 	docker-compose up -d 
